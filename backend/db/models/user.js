@@ -1,6 +1,7 @@
 'use strict';
-const { Model, Validator } = require('sequelize');
+
 const bcrypt = require('bcryptjs');
+const { Model, Validator } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
@@ -14,8 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     static getCurrentUserById(id) {
-      return User.scope("currentUser").findById(id);
-    };
+      return User.scope("currentUser").findByPk(id);
+    }
 
     static async login({ credential, password }) {
       const { Op } = require('sequelize');
@@ -42,6 +43,18 @@ module.exports = (sequelize, DataTypes) => {
       });
       return await User.scope('currentUser').findByPk(user.id);
     }
+
+
+    static async signup({ username, email, password }) {
+      const hashedPassword = bcrypt.hashSync(password);
+      const user = await User.create({
+        username,
+        email,
+        hashedPassword
+      });
+      return await User.scope('currentUser').findByPk(user.id);
+    }
+
 
     static associate(models) {
       // define association here

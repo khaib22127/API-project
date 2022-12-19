@@ -6,6 +6,10 @@ const csurf = require('csurf');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 
+const routes = require('./routes');   // Importing the route folder
+
+const { ValidationError } = require('sequelize');
+
 const { environment } = require('./config');
 const isProduction = environment === 'production';
 
@@ -20,47 +24,42 @@ app.use(express.json());
 
 // Security Middleware
 if (!isProduction) {
-    // enable cors only in development
-    app.use(cors());
-  }
+  // enable cors only in development
+  app.use(cors());
+}
 
-  // helmet helps set a variety of headers to better secure your app
-  app.use(
-    helmet.crossOriginResourcePolicy({
-      policy: "cross-origin"
-    })
-  );
+// helmet helps set a variety of headers to better secure your app
+app.use(
+  helmet.crossOriginResourcePolicy({
+    policy: "cross-origin"
+  })
+);
 
-  // Set the _csrf token and create req.csrfToken method
-  app.use(
-    csurf({
-      cookie: {
-        secure: isProduction,
-        sameSite: isProduction && "Lax",
-        httpOnly: true
-      }
-    })
-  );
+// Set the _csrf token and create req.csrfToken method
+app.use(
+  csurf({
+    cookie: {
+      secure: isProduction,
+      sameSite: isProduction && "Lax",
+      httpOnly: true
+    }
+  })
+);
 
-const log = console.log;
 
-  const routes = require('./routes');   // Importing the route folder
-  app.use(routes); // Connect all the routes
+app.use(routes); // Connect all the routes
 
 
 // Catch unhandled requests and forward to error handler.
 app.use((_req, _res, next) => {
   const err = new Error("The requested resource couldn't be found.");
   err.title = "Resource Not Found";
-
-  log("err title:: ", err.title)
-
   err.errors = ["The requested resource couldn't be found."];
   err.status = 404;
   next(err);
 });
 
-const { ValidationError } = require('sequelize');
+
 
 app.use((err, _req, _res, next) => {
   // check if error is a Sequelize error:

@@ -35,11 +35,6 @@ const validateSignup = [
 ];
 
 
-const validateSignUpInput = [
-
-];
-
-
 
 // Sign up
 // POST /api/users
@@ -54,6 +49,8 @@ router.post('/', validateSignup, async (req, res) => {
     });
 }
 );
+
+
 
 
 

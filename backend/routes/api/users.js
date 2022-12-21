@@ -35,6 +35,12 @@ const validateSignup = [
 ];
 
 
+const validateSignUpInput = [
+
+];
+
+
+
 // Sign up
 // POST /api/users
 router.post('/', validateSignup, async (req, res) => {
@@ -44,15 +50,10 @@ router.post('/', validateSignup, async (req, res) => {
     await setTokenCookie(res, user);
 
     return res.json({
-        user: user
+         firstName, lastName, email, username, token: ""
     });
 }
 );
-
-
-
-
-
 
 
 

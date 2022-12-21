@@ -68,8 +68,6 @@ const requireAuth = function (req, _res, next) {
 }
 
 const userAuth = function (req, res, next) {
-    if (req.user) return next();
-
     res.status(401);
     res.json({
         "message": "Authentication required",

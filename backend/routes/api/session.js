@@ -25,7 +25,7 @@ const validateLogin = [
 
 // Log in
 // POST /api/session
-router.post('/', validateLogin, async (req, res, next) => {
+router.post('/', validateLogin, userAuth, async (req, res, next) => {
     const { credential, password } = req.body;
 
     const user = await User.login({ credential, password });
@@ -57,7 +57,7 @@ router.delete('/', (_req, res) => {
 
 
 // Restore session user
-// GET /api/csrf/restore
+// GET /api/session
 router.get('/', restoreUser, (req, res) => {
     const { user } = req;
     if (user) {

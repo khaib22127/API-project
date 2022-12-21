@@ -1,7 +1,7 @@
 // backend/routes/api/session.js
 const express = require('express');
 
-const { setTokenCookie, restoreUser } = require('../../utils/auth');
+const { setTokenCookie, restoreUser, userAuth } = require('../../utils/auth');
 const { User } = require('../../db/models');
 
 const router = express.Router();
@@ -24,6 +24,7 @@ const validateLogin = [
 
 
 // Log in
+// POST /api/session
 router.post('/', validateLogin, async (req, res, next) => {
     const { credential, password } = req.body;
 
@@ -40,13 +41,14 @@ router.post('/', validateLogin, async (req, res, next) => {
     await setTokenCookie(res, user);
 
     return res.json({
-        user: user
+        user: user,
     });
 }
 );
 
 
 // Log out
+// DELETE /api/session
 router.delete('/', (_req, res) => {
     res.clearCookie('token');
     return res.json({ message: 'success' });
@@ -55,6 +57,7 @@ router.delete('/', (_req, res) => {
 
 
 // Restore session user
+// GET /api/csrf/restore
 router.get('/', restoreUser, (req, res) => {
     const { user } = req;
     if (user) {

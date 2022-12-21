@@ -67,7 +67,23 @@ const requireAuth = function (req, _res, next) {
     return next(err);
 }
 
+const userAuth = function (req, res, next) {
+    if (req.user) return next();
 
-const userAuth = 
+    res.status(401);
+    res.json({
+        "message": "Authentication required",
+        "statusCode": 401
+    })
+}
 
-module.exports = { setTokenCookie, restoreUser, requireAuth };
+const userPermission = function (req, res, next) {
+    if (req.user) return next();
+    res.status(403);
+    res.json({
+        "message": "Forbidden",
+        "statusCode": 403
+    })
+}
+
+module.exports = { setTokenCookie, restoreUser, requireAuth, userAuth, userPermission };

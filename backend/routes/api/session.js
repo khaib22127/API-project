@@ -25,18 +25,28 @@ const validateLogin = [
 
 // Log in
 // POST /api/session
-router.post('/', validateLogin, userAuth, async (req, res, next) => {
+router.post('/', validateLogin, async (req, res, next) => {
     const { credential, password } = req.body;
 
     const user = await User.login({ credential, password });
 
     if (!user) {
-        const err = new Error('Login failed');
-        err.status = 401;
-        err.title = 'Login failed';
-        err.errors = ['The provided credentials were invalid.'];
-        return next(err);
+        // const err = new Error('Login failed');
+        // err.status = 401;
+        // err.title = 'Login failed';
+        // err.errors = ['The provided credentials were invalid.'];
+        // return next(err);
+        res.status(400);
+        return res.json({
+            "message": "Validation error",
+            "statusCode": 400,
+            "errors": {
+                "credential": "Email or username is required",
+                "password": "Password is required"
+            }
+        })
     }
+    next(err);
 
     await setTokenCookie(res, user);
 
@@ -63,7 +73,11 @@ router.get('/', restoreUser, (req, res) => {
     if (user) {
         return res.json({ user: user.toSafeObject() });
     } else {
-        return res.json({ user: null });
+        res.status(401);
+        return res.json({
+            "message": "Invalid credentials",
+            "statusCode": 401
+        })
     }
 }
 );

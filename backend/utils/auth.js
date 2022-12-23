@@ -85,42 +85,5 @@ const userPermission = function (req, res, next) {
 }
 
 
-const signupAuth = async (req, res, next) => {
-    const {  email, username } = req.body;
 
-    const emails = await User.findOne({ where: {email} })
-    const usernames = await User.findOne({ where: {username} })
-
-    if (emails && usernames) {
-        return res.json({
-            "message": "User already exists",
-            "statusCode": 403,
-            "errors": {
-              "email": "User with that email already exists11111"
-            }
-        })
-    };
-
-    if (emails) {
-       return res.json({
-        "message": "User already exists",
-            "statusCode": 403,
-            "errors": {
-              "email": "User with that email already exists1111"
-            }
-       })
-    };
-
-    if (usernames) {
-        return res.json({
-            "message": "User already exists",
-            "statusCode": 403,
-            "errors": {
-              "username": "User with that username already exists"
-            }
-        })
-     };
-}
-
-
-module.exports = { setTokenCookie, restoreUser, requireAuth, userAuth, userPermission, signupAuth };
+module.exports = { setTokenCookie, restoreUser, requireAuth, userAuth, userPermission };

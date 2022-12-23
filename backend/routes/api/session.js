@@ -28,7 +28,7 @@ const validateLogin = [
         .withMessage('Email or username is required'),
     check('password')
         .exists({ checkFalsy: true })
-        .withMessage('Please provide a password.'),
+        .withMessage('Password is required'),
     userValidationErrors
 ];
 
@@ -45,14 +45,10 @@ router.post('/', validateLogin, async (req, res, next) => {
         // err.title = 'Login failed';
         // err.errors = ['The provided credentials were invalid.'];
         // return next(err);
-        res.status(400);
+        res.status(401);
         return res.json({
-            "message": "Validation error",
-            "statusCode": 400,
-            "errors": {
-                "credential": "Email or username is required",
-                "password": "Password is required"
-            }
+                "message": "Invalid credentials",
+                "statusCode": 401
         })
     }
     // next(err);

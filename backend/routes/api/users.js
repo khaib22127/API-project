@@ -1,7 +1,7 @@
 // backend/routes/api/users.js
 const express = require('express');
 
-const { setTokenCookie, requireAuth, signupAuth } = require('../../utils/auth');
+const { setTokenCookie, requireAuth } = require('../../utils/auth');
 const { User } = require('../../db/models');
 
 const router = express.Router();
@@ -68,11 +68,9 @@ router.post('/', validateUserInput, validateSignup, async (req, res, next) => {
 
     const { firstName, lastName, email, username, password } = req.body;
 
-
     const usernames = await User.findOne({ where: { username } })
 
     const emails = await User.findOne({ where: { email } })
-
 
     if (emails) {
         res.status(403)
@@ -96,9 +94,6 @@ router.post('/', validateUserInput, validateSignup, async (req, res, next) => {
         })
     };
 
-
-
-
     const user = await User.signup({ firstName, lastName, email, username, password });
 
     await setTokenCookie(res, user);
@@ -108,7 +103,6 @@ router.post('/', validateUserInput, validateSignup, async (req, res, next) => {
     });
 }
 );
-
 
 
 router.get('/', async (req, res) => {

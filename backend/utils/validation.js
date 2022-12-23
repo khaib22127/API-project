@@ -20,6 +20,29 @@ const handleValidationErrors = (req, _res, next) => {
     next();
 };
 
+
+
+const userValidationErrors = (req, res, next) => {
+    const validationErrors = validationResult(req);
+
+    if (!validationErrors.isEmpty()) {
+        let errors = validationErrors
+            .array()
+            .map((error) => ({ [error.param]: error.msg }));
+
+
+        const err = Error();
+        err.errors = Object.assign(errors[0], ...errors);
+        err.status = 400;
+        err.statusCode = 400
+        err.message = "Validation error"
+        next(err);
+
+    }
+    next();
+};
+
 module.exports = {
-    handleValidationErrors
+    handleValidationErrors,
+    userValidationErrors
 };

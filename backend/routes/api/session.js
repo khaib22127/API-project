@@ -7,21 +7,30 @@ const { User } = require('../../db/models');
 const router = express.Router();
 
 const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
+const { handleValidationErrors, userValidationErrors } = require('../../utils/validation');
 
+
+// const validateLogin = [
+//     check('credential')
+//         .exists({ checkFalsy: true })
+//         .notEmpty()
+//         .withMessage('Please provide a valid email or username.'),
+//     check('password')
+//         .exists({ checkFalsy: true })
+//         .withMessage('Please provide a password.'),
+//     handleValidationErrors
+// ];
 
 const validateLogin = [
     check('credential')
         .exists({ checkFalsy: true })
         .notEmpty()
-        .withMessage('Please provide a valid email or username.'),
+        .withMessage('Email or username is required'),
     check('password')
         .exists({ checkFalsy: true })
         .withMessage('Please provide a password.'),
-    handleValidationErrors
+    userValidationErrors
 ];
-
-
 
 // Log in
 // POST /api/session
@@ -46,7 +55,7 @@ router.post('/', validateLogin, async (req, res, next) => {
             }
         })
     }
-    next(err);
+    // next(err);
 
     await setTokenCookie(res, user);
 

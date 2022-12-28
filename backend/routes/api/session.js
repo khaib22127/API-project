@@ -7,21 +7,30 @@ const { User } = require('../../db/models');
 const router = express.Router();
 
 const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
+const { handleValidationErrors, userValidationErrors } = require('../../utils/validation');
 
+
+// const validateLogin = [
+//     check('credential')
+//         .exists({ checkFalsy: true })
+//         .notEmpty()
+//         .withMessage('Please provide a valid email or username.'),
+//     check('password')
+//         .exists({ checkFalsy: true })
+//         .withMessage('Please provide a password.'),
+//     handleValidationErrors
+// ];
 
 const validateLogin = [
     check('credential')
         .exists({ checkFalsy: true })
         .notEmpty()
-        .withMessage('Please provide a valid email or username.'),
+        .withMessage('Email or username is required'),
     check('password')
         .exists({ checkFalsy: true })
-        .withMessage('Please provide a password.'),
-    handleValidationErrors
+        .withMessage('Password is required'),
+    userValidationErrors
 ];
-
-
 
 // Log in
 // POST /api/session
@@ -36,17 +45,13 @@ router.post('/', validateLogin, async (req, res, next) => {
         // err.title = 'Login failed';
         // err.errors = ['The provided credentials were invalid.'];
         // return next(err);
-        res.status(400);
+        res.status(401);
         return res.json({
-            "message": "Validation error",
-            "statusCode": 400,
-            "errors": {
-                "credential": "Email or username is required",
-                "password": "Password is required"
-            }
+                "message": "Invalid credentials",
+                "statusCode": 401
         })
     }
-    next(err);
+    // next(err);
 
     await setTokenCookie(res, user);
 

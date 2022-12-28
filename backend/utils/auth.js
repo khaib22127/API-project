@@ -84,4 +84,6 @@ const userPermission = function (req, res, next) {
     })
 }
 
+
+
 module.exports = { setTokenCookie, restoreUser, requireAuth, userAuth, userPermission };

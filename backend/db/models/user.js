@@ -48,16 +48,20 @@ module.exports = (sequelize, DataTypes) => {
 
 
     static associate(models) {
-      // define association here
+      User.belongsTo(models.Booking, { foreignKey: 'userId' });
+      User.belongsTo(models.Spot, { through: models.Booking });
+      User.belongsTo(models.Review, { foreignKey: 'userId' })
     }
   };
 
   User.init({
     firstName: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      allowNull: false
     },
     lastName: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      allowNull: false
     },
     email: {
       type: DataTypes.STRING,

@@ -1,16 +1,43 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model, json } = require('sequelize');
+
+
 module.exports = (sequelize, DataTypes) => {
   class Review extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+
+
+    // static async averageStars(stars) {
+    //   const avgStarReview = await Review.findAll({
+    //     attributes: [
+    //       'stars',
+    //       [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating'],
+    //     ]
+    //   })
+    // }
+
+//     static getCurrentSpotReviewById(id) {
+//       return Review.scope("currentSpotReview").findByPk(id);
+//     }
+
+//     static async getAvgStarReview(spotId) {
+//       let average = await Review.findAll({
+//         group: 'spotId',
+
+//         attributes: [
+//           'spotId',
+//           [sequelize.fn('AVG', sequelize.col('stars')), 'Rating']
+//         ]
+//       })
+// return await Review.findByPk(average.id)
+//     }
+
+
+
     static associate(models) {
-      // define association here
+      Review.belongsTo(models.Spot, { foreignKey: 'spotId' });
+      Review.belongsTo(models.User, { foreignKey: 'userId' });
+      Review.hasMany(models.ReviewImage, { foreignKey: 'reviewId' });
+      //   Review.belongsTo(models.SpotImage, { through: models.Spot })
     }
   }
   Review.init({
@@ -21,6 +48,11 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Review',
+    scopes: {
+      currentSpotReview: {
+        attributes: {}
+      }
+    }
   });
   return Review;
 };

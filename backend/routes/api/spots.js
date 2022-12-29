@@ -8,7 +8,40 @@ const { check } = require('express-validator');
 const { userValidationErrors } = require('../../utils/validation');
 const { requireAuth, restoreUser, userAuth } = require('../../utils/auth');
 
-
+const validateSpot = [
+    check('address')
+    .exists({ checkFalsy: true })
+    .withMessage('Street address is required'),
+    check("city")
+    .exists({ checkFalsy: true })
+    .withMessage('City is required'),
+    check("state")
+    .exists({ checkFalsy: true })
+    .withMessage('State is required'),
+    check("country")
+    .exists({ checkFalsy: true })
+    .withMessage('Country is required'),
+    check("lat")
+    .exists({ checkFalsy: true })
+    .isNumeric({ checkFalsy: true })
+    .withMessage('Latitude is not valid'),
+    check("lng")
+    .exists({ checkFalsy: true })
+    .isNumeric({ checkFalsy: true })
+    .withMessage('Longitude is not valid'),
+    check("name")
+    .exists({ checkFalsy: true })
+    .isLength({ max: 50 })
+    .withMessage('Name must be less than 50 characters'),
+    check("description")
+    .exists({ checkFalsy: true })
+    .withMessage('Description is required'),
+    check("price")
+    .exists({ checkFalsy: true })
+    .isNumeric({ checkFalsy: true })
+    .withMessage('Price per day is required'),
+    userValidationErrors
+];
 
 // Get all spots
 // GET /api/spots
@@ -69,59 +102,62 @@ router.get('/', async (req, res, next) => {
 // GET /api/spots/current
 router.get('/current', requireAuth, async (req, res) => {
 
-    const spots = await Spot.findAll({
-        where: {
-            ownerId: req.user.id
-        },
-        include: [
-            {
-                model: Review,
+    const { user } = req;
+
+    if (user) {
+        const spots = await Spot.findAll({
+            where: {
+                ownerId: req.user.id
             },
-            {
-                model: SpotImage,
-            }
-        ]
-    });
-
-
-    let rating = await Review.getAvgStarReview();
-
-
-    let currentSpot = [];
-    spots.forEach(spot => {
-        currentSpot.push(spot.toJSON())
-    })
-
-    currentSpot.forEach(spot => {
-
-        spot.Reviews.forEach(star => {
-
-            for (let id of rating) {
-                if (star.spotId === id.spotId) {
-                    spot.avgRating = id.dataValues.Rating
+            include: [
+                {
+                    model: Review,
+                },
+                {
+                    model: SpotImage,
                 }
-                delete spot.spotId
-
-            }
-
+            ]
         });
 
 
-        spot.SpotImages.forEach(image => {
-            if (image.preview === true) {
-                spot.previewImage = spot.preview
-                spot.previewImage = image.url;
-            }
+        let rating = await Review.getAvgStarReview();
+
+
+        let currentSpot = [];
+        spots.forEach(spot => {
+            currentSpot.push(spot.toJSON())
         })
 
-        delete spot.Reviews
-        delete spot.SpotImages
-    })
+        currentSpot.forEach(spot => {
 
-    return res.json({ Spots: currentSpot })
+            spot.Reviews.forEach(star => {
+
+                for (let id of rating) {
+                    if (star.spotId === id.spotId) {
+                        spot.avgRating = id.dataValues.Rating
+                    }
+                    delete spot.spotId
+
+                }
+
+            });
+
+
+            spot.SpotImages.forEach(image => {
+                if (image.preview === true) {
+                    spot.previewImage = spot.preview
+                    spot.previewImage = image.url;
+                }
+            })
+
+            delete spot.Reviews
+            delete spot.SpotImages
+        })
+
+        return res.json({ Spots: currentSpot })
+    }
+
 });
-
-
 
 
 
@@ -129,8 +165,18 @@ router.get('/current', requireAuth, async (req, res) => {
 // GET /api/spots/:spotId
 router.get('/:spotId', async (req, res) => {
 
-    const rating = await Review.getAvgStarReview();
+     let findSpot = await Spot.findByPk(req.params.spotId)
 
+    if (findSpot === null) {
+        res.status(404)
+        res.json({
+            "message": "Spot couldn't be found",
+            "statusCode": 404
+        })
+    }
+
+
+    const rating = await Review.getAvgStarReview();
 
     let spots = await Spot.findAll({
         where: {
@@ -187,9 +233,34 @@ router.get('/:spotId', async (req, res) => {
         delete spot.Users
 
     })
-
     res.json(spo[0])
 });
+
+
+
+
+// Create a Spot
+// Creates and returns a new spot
+// POST /api/spots
+router.post('/', requireAuth, validateSpot, async (req, res) => {
+
+    const user = await User.findByPk(req.user.id);
+
+    const {
+        address, city, state,
+        coutry, lat, lng, name,
+        description, price } = req.body;
+
+
+        const spot = await Spot.create({
+            ownerId: user.id,
+            address, city, state,
+            coutry, lat, lng, name,
+            description, price
+        })
+        res.json(spot)
+});
+
 
 
 

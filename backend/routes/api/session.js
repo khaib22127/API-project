@@ -3,7 +3,7 @@ const express = require('express');
 
 const { setTokenCookie, restoreUser, userAuth } = require('../../utils/auth');
 const { User } = require('../../db/models');
-
+// const { Spot, Review, SpotImage, User, sequelize } = require('../../db/models');
 const router = express.Router();
 
 const { check } = require('express-validator');
@@ -86,9 +86,6 @@ router.get('/', restoreUser, (req, res) => {
     }
 }
 );
-
-
-
 
 
 

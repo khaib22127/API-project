@@ -105,11 +105,11 @@ router.post('/', validateUserInput, validateSignup, async (req, res, next) => {
 );
 
 
-router.get('/', async (req, res) => {
-    const { username } = req.body
-    const users = await User.findAll();
+// router.get('/', async (req, res) => {
+//     const { username } = req.body
+//     const users = await User.findAll();
 
-    return res.json(users)
-})
+//     return res.json(users)
+// })
 
 module.exports = router;

@@ -6,30 +6,17 @@ module.exports = (sequelize, DataTypes) => {
   class Review extends Model {
 
 
-    // static async averageStars(stars) {
-    //   const avgStarReview = await Review.findAll({
-    //     attributes: [
-    //       'stars',
-    //       [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating'],
-    //     ]
-    //   })
-    // }
+    static getAvgStarReview() {
+      let average = Review.findAll({
+        group: 'spotId',
 
-//     static getCurrentSpotReviewById(id) {
-//       return Review.scope("currentSpotReview").findByPk(id);
-//     }
-
-//     static async getAvgStarReview(spotId) {
-//       let average = await Review.findAll({
-//         group: 'spotId',
-
-//         attributes: [
-//           'spotId',
-//           [sequelize.fn('AVG', sequelize.col('stars')), 'Rating']
-//         ]
-//       })
-// return await Review.findByPk(average.id)
-//     }
+        attributes: [
+          'spotId',
+          [sequelize.fn('AVG', sequelize.col('stars')), 'Rating']
+        ]
+      })
+      return average;
+    }
 
 
 

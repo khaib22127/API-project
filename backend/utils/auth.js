@@ -1,7 +1,7 @@
 // Phase 3
 const jwt = require('jsonwebtoken');
 const { jwtConfig } = require('../config');
-const { User } = require('../db/models');
+const { Spot, Review, SpotImage, User, sequelize } = require('../db/models');
 
 const { secret, expiresIn } = jwtConfig;
 
@@ -67,6 +67,7 @@ const requireAuth = function (req, _res, next) {
     return next(err);
 }
 
+
 const userAuth = function (req, res, next) {
     res.status(401);
     res.json({
@@ -75,13 +76,27 @@ const userAuth = function (req, res, next) {
     })
 }
 
-const userPermission = function (req, res, next) {
-    if (req.user) return next();
-    res.status(403);
-    res.json({
-        "message": "Forbidden",
-        "statusCode": 403
-    })
+
+const userPermission = async function (req, res, next) {
+
+    const spotOwner = await Spot.findByPk(req.params.spotId)
+    const user = await User.findByPk(req.user.id);
+
+    if (spotOwner === null) {
+        res.status(404)
+        return res.json({
+            "message": "Spot couldn't be found",
+            "statusCode": 404
+        })
+    }
+    if (spotOwner.ownerId !== user.id) {
+        res.status(403);
+        return res.json({
+            "message": "Forbidden",
+            "statusCode": 403
+        })
+    }
+     return next();
 }
 
 

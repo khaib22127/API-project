@@ -17,7 +17,7 @@ module.exports = {
         stars: 5
       },
       {
-        spotId: 1,
+        spotId: 2,
         userId: 2,
         review: 'This was an awesome spot! 2',
         stars: 4
@@ -39,6 +39,12 @@ module.exports = {
         userId: 5,
         review: 'This was an awesome spot! 5',
         stars: 5
+      },
+      {
+        spotId: 1,
+        userId: 6,
+        review: 'This was an awesome spot! 2',
+        stars: 4
       },
     ])
   },

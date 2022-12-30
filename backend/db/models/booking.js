@@ -18,10 +18,6 @@ module.exports = (sequelize, DataTypes) => {
   Booking.init({
     spotId: {
       type: DataTypes.INTEGER,
-      references: {
-        model: 'Spot',
-        key: 'id'
-      }
     },
     userId: {
       type: DataTypes.INTEGER,

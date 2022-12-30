@@ -270,14 +270,14 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
 
     const {
         address, city, state,
-        coutry, lat, lng, name,
+        country, lat, lng, name,
         description, price } = req.body;
 
 
     const spot = await Spot.create({
         ownerId: user.id,
         address, city, state,
-        coutry, lat, lng, name,
+        country, lat, lng, name,
         description, price
     })
     res.json(spot)
@@ -289,7 +289,7 @@ router.put('/:spotId', requireAuth, userPermission, validateSpot, async (req, re
 
     const {
         address, city, state,
-        coutry, lat, lng, name,
+        country, lat, lng, name,
         description, price } = req.body;
 
     let spot = await Spot.findByPk(req.params.spotId)
@@ -297,7 +297,7 @@ router.put('/:spotId', requireAuth, userPermission, validateSpot, async (req, re
     spot.address = address;
     spot.city = city;
     spot.state = state;
-    spot.count = coutry;
+    spot.country = country;
     spot.lat = lat;
     spot.lng = lng;
     spot.name = name;

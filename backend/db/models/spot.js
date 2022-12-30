@@ -16,18 +16,14 @@ module.exports = (sequelize, DataTypes) => {
       Spot.hasMany(models.Review, {  foreignKey: 'spotId' });
       Spot.hasMany(models.Booking, { foreignKey: 'spotId'});
       Spot.hasMany(models.SpotImage, { foreignKey: 'spotId' });
-      Spot.belongsToMany(models.User, { through: models.Booking, foreignKey: 'spotId' })
+      Spot.belongsToMany(models.User, { through: models.Booking})
       // Spot.hasMany(models.ReviewImage, { through: models.Review }, { foreignKey: 'spotId'})
     }
   }
   Spot.init({
     ownerId: {
       type: DataTypes.INTEGER,
-      references: {
-        model: 'User',
-        through: { model: 'Booking' },
-        key: 'id'
-      }
+      
     },
     address: {
       type: DataTypes.STRING,
@@ -43,6 +39,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     lat: {
       type: DataTypes.DECIMAL,
+      validate: {
+        isInt: true
+      }
     },
     lng: {
       type: DataTypes.DECIMAL,

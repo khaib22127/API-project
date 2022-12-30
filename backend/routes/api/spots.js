@@ -4,9 +4,9 @@ const express = require('express')
 const { Op } = require("sequelize");
 const { Spot, Review, SpotImage, User, sequelize } = require('../../db/models');
 const router = express.Router();
-const { check } = require('express-validator');
+const { check, body } = require('express-validator');
 const { userValidationErrors } = require('../../utils/validation');
-const { requireAuth, restoreUser, userAuth } = require('../../utils/auth');
+const { requireAuth, restoreUser, userPermission } = require('../../utils/auth');
 
 const validateSpot = [
     check('address')
@@ -22,11 +22,11 @@ const validateSpot = [
         .exists({ checkFalsy: true })
         .withMessage('Country is required'),
     check("lat")
-        .exists({ checkFalsy: true })
+        .exists()
         .isNumeric({ checkFalsy: true })
         .withMessage('Latitude is not valid'),
     check("lng")
-        .exists({ checkFalsy: true })
+        .exists()
         .isNumeric({ checkFalsy: true })
         .withMessage('Longitude is not valid'),
     check("name")
@@ -37,9 +37,36 @@ const validateSpot = [
         .exists({ checkFalsy: true })
         .withMessage('Description is required'),
     check("price")
-        .exists({ checkFalsy: true })
+        .exists()
         .isNumeric({ checkFalsy: true })
         .withMessage('Price per day is required'),
+    body('address')
+        .exists({ checkFalsy: true })
+        .withMessage('You are missing ===> address <=== field!'),
+    body("city")
+        .exists({ checkFalsy: true })
+        .withMessage('You are missing ===> city <=== field!'),
+    body("state")
+        .exists({ checkFalsy: true })
+        .withMessage('You are missing ===> state <=== field!'),
+    body("country")
+        .exists({ checkFalsy: true })
+        .withMessage('You are missing ===> country <=== field!'),
+    body("lat")
+        .exists()
+        .withMessage('You are missing ===> lat <=== field!'),
+    body("lng")
+        .exists()
+        .withMessage('You are missing ===> lng <=== field!'),
+    body("name")
+        .exists({ checkFalsy: true })
+        .withMessage('You are missing ===> name <=== field!'),
+    body("description")
+        .exists({ checkFalsy: true })
+        .withMessage('You are missing ===> description <=== field!'),
+    body("price")
+        .exists()
+        .withMessage('You are missing ===> price <=== field!'),
     userValidationErrors
 ];
 
@@ -165,7 +192,7 @@ router.get('/:spotId', async (req, res) => {
 
     if (findSpot === null) {
         res.status(404)
-       return res.json({
+        return res.json({
             "message": "Spot couldn't be found",
             "statusCode": 404
         })
@@ -214,9 +241,7 @@ router.get('/:spotId', async (req, res) => {
                 if (star.spotId === id.spotId) {
                     spot.avgStarRating = id.dataValues.Rating
                 }
-
             }
-
         });
 
         spot.Users.forEach(user => {
@@ -229,7 +254,7 @@ router.get('/:spotId', async (req, res) => {
         delete spot.Users
 
     })
-   return res.json(spo[0])
+    return res.json(spo[0])
 });
 
 
@@ -258,8 +283,42 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
     res.json(spot)
 });
 
+// Edit a Spot
+// PUT /api/spots/:spotId
+router.put('/:spotId', requireAuth, userPermission, validateSpot, async (req, res) => {
 
+    const {
+        address, city, state,
+        coutry, lat, lng, name,
+        description, price } = req.body;
 
+    let spot = await Spot.findByPk(req.params.spotId)
 
+    spot.address = address;
+    spot.city = city;
+    spot.state = state;
+    spot.count = coutry;
+    spot.lat = lat;
+    spot.lng = lng;
+    spot.name = name;
+    spot.description = description;
+    spot.price = price;
+
+    await spot.save()
+    return res.json(spot)
+})
+
+// Deletes an existing spot
+// DELETE /api/spots/:spotId
+router.delete('/:spotId', requireAuth, userPermission, async (req, res) => {
+
+    const spot = await Spot.findByPk(req.params.spotId);
+
+    await spot.destroy();
+    res.json({
+        "message": "Successfully deleted",
+        "statusCode": 200
+      })
+});
 
 module.exports = router;

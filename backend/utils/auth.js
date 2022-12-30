@@ -82,20 +82,20 @@ const userPermission = async function (req, res, next) {
     const spotOwner = await Spot.findByPk(req.params.spotId)
     const user = await User.findByPk(req.user.id);
 
-    if (spotOwner === null) {
+    if (spotOwner === null || (spotOwner.ownerId !== user.id)) {
         res.status(404)
         return res.json({
             "message": "Spot couldn't be found",
             "statusCode": 404
         })
     }
-    if (spotOwner.ownerId !== user.id) {
-        res.status(403);
-        return res.json({
-            "message": "Forbidden",
-            "statusCode": 403
-        })
-    }
+    // if (spotOwner.ownerId !== user.id) {
+    //     res.status(403);
+    //     return res.json({
+    //         "message": "Forbidden",
+    //         "statusCode": 403
+    //     })
+    // }
      return next();
 }
 

@@ -2,11 +2,12 @@
 const express = require('express')
 
 const { Op } = require("sequelize");
-const { Spot, Review, SpotImage, User, sequelize } = require('../../db/models');
+const { Spot, Review, SpotImage, User, ReviewImage, sequelize } = require('../../db/models');
 const router = express.Router();
 const { check, body } = require('express-validator');
 const { userValidationErrors } = require('../../utils/validation');
 const { requireAuth, restoreUser, userPermission } = require('../../utils/auth');
+const review = require('../../db/models/review');
 
 const validateSpot = [
     check('address')
@@ -38,37 +39,12 @@ const validateSpot = [
         .withMessage('Description is required'),
     check("price")
         .exists()
-        .isNumeric({ checkFalsy: true })
+        .isInt({ min: 0 })
         .withMessage('Price per day is required'),
-    body('address')
-        .exists({ checkFalsy: true })
-        .withMessage('You are missing ===> address <=== field!'),
-    body("city")
-        .exists({ checkFalsy: true })
-        .withMessage('You are missing ===> city <=== field!'),
-    body("state")
-        .exists({ checkFalsy: true })
-        .withMessage('You are missing ===> state <=== field!'),
-    body("country")
-        .exists({ checkFalsy: true })
-        .withMessage('You are missing ===> country <=== field!'),
-    body("lat")
-        .exists()
-        .withMessage('You are missing ===> lat <=== field!'),
-    body("lng")
-        .exists()
-        .withMessage('You are missing ===> lng <=== field!'),
-    body("name")
-        .exists({ checkFalsy: true })
-        .withMessage('You are missing ===> name <=== field!'),
-    body("description")
-        .exists({ checkFalsy: true })
-        .withMessage('You are missing ===> description <=== field!'),
-    body("price")
-        .exists()
-        .withMessage('You are missing ===> price <=== field!'),
     userValidationErrors
 ];
+
+
 
 // Get all spots
 // GET /api/spots
@@ -129,57 +105,46 @@ router.get('/', async (req, res, next) => {
 // GET /api/spots/current
 router.get('/current', requireAuth, async (req, res) => {
 
-    const { user } = req;
-
-    if (user) {
-        const spots = await Spot.findAll({
-            where: {
-                ownerId: req.user.id
-            },
+    const spot = await Spot.findAll({
+        where: {
+            ownerId: req.user.id
+        },
+        attributes: {
             include: [
-                {
-                    model: Review,
-                },
-                {
-                    model: SpotImage,
-                }
-            ]
-        });
+                [sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgStarRating'],
+            ],
+        },
+        include: [
+            {
+                model: Review,
+                attributes: []
+            },
+            {
+                model: SpotImage,
+                attributes: ['id', 'url', 'preview'],
+            },
+        ],
+        group: ['Spot.id', 'SpotImages.id'],
+    })
+
+    let spots = [];
+    spot.forEach(ele => {
+        spots.push(ele.toJSON())
+    })
 
 
-        let rating = await Review.getAvgStarReview();
-
-
-        let currentSpot = [];
-        spots.forEach(spot => {
-            currentSpot.push(spot.toJSON())
+    spots.forEach(spot => {
+        spot.SpotImages.forEach(image => {
+            if (image.preview === true) {
+                spot.previewImage = spot.preview
+                spot.previewImage = image.url;
+            }
+            console.log("LOOOKING::: =======>   ", image.preview)
         })
+        delete spot.SpotImages
+    })
 
-        currentSpot.forEach(spot => {
-
-            spot.Reviews.forEach(star => {
-
-                for (let id of rating) {
-                    if (star.spotId === id.spotId) {
-                        spot.avgRating = id.dataValues.Rating
-                    }
-                    delete spot.spotId
-                }
-            });
-
-
-            spot.SpotImages.forEach(image => {
-                if (image.preview === true) {
-                    spot.previewImage = spot.preview
-                    spot.previewImage = image.url;
-                }
-            })
-
-            delete spot.Reviews
-            delete spot.SpotImages
-        })
-        return res.json({ Spots: currentSpot })
-    }
+    res.json({Spots: spots})
 });
 
 
@@ -188,31 +153,94 @@ router.get('/current', requireAuth, async (req, res) => {
 // GET /api/spots/:spotId
 router.get('/:spotId', async (req, res) => {
 
-    let findSpot = await Spot.findByPk(req.params.spotId)
+    // let findSpot = await Spot.findOne({
+    //     where: {
+    //         id: req.params.spotId
+    //     },
+    //     include: [
+    //         {
+    //             model: Review,
+    //             attributes: [
+    //                 'spotId',
+    //                 'review',
+    //                 'stars'
+    //             ]
+    //         },
+    //         {
+    //             model: SpotImage,
+    //             attributes: ['id', 'url', 'preview'],
+    //         },
+    //         {
+    //             model: User,
+    //             attributes: ['id', 'firstName', 'lastName']
+    //         }
+    //     ],
+    // })
 
-    if (findSpot === null) {
-        res.status(404)
-        return res.json({
-            "message": "Spot couldn't be found",
-            "statusCode": 404
-        })
-    }
+    // if (findSpot === null) {
+    //     res.status(404)
+    //     return res.json({
+    //         "message": "Spot couldn't be found",
+    //         "statusCode": 404
+    //     })
+    // }
 
 
-    const rating = await Review.getAvgStarReview();
+    // const rating = await Review.getAvgStarReview();
 
-    let spots = await Spot.findAll({
-        where: {
-            ownerId: req.params.spotId,
+    // const reviewNum = await Review.count('review')
+
+    // let spots = [];
+    // spots.push(findSpot.toJSON())
+
+    // for (let spot of spots) {
+    //     spot.Reviews.forEach(star => {
+    //         if (star.review) {
+    //             star.review = reviewNum
+    //             spot.numReviews = star.review
+    //         }
+
+    //         for (let id of rating) {
+
+
+
+
+
+    //             if (star.spotId === id.spotId) {
+    //                 spot.Reviews = id.dataValues.Rating
+    //                 spot.avgStarRating = spot.Reviews
+    //             }
+    //         }
+    //     });
+    //     spot.SpotImage = spot.SpotImages
+    //     delete spot.SpotImages
+    //     spot.SpotImages = spot.SpotImage
+    //     spot.Users.forEach(user => {
+    //         spot.Owner = user
+    //         delete user.Booking
+
+    //     })
+    //     delete spot.spotId
+    //     delete spot.Reviews
+    //     delete spot.Users
+    //     delete spot.SpotImage
+    // }
+
+    // return res.json(spots[0])
+
+    //==================================================================================
+
+    let spot = await Spot.findByPk(req.params.spotId, {
+        attributes: {
+            include: [
+                [sequelize.fn('COUNT', sequelize.col('Reviews.review')), 'numReviews'],
+                [sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgStarRating'],
+            ],
         },
         include: [
             {
                 model: Review,
-                attributes: [
-                    'spotId',
-                    'review',
-                    'stars'
-                ]
+                attributes: [],
             },
             {
                 model: SpotImage,
@@ -220,41 +248,34 @@ router.get('/:spotId', async (req, res) => {
             },
             {
                 model: User,
-                attributes: ['id', 'firstName', 'lastName']
+                attributes: ['id', 'firstName', 'lastName'],
             }
         ],
-    });
 
-    const reviewNum = await Review.count('review')
+        group: ['Spot.id', 'SpotImages.id'],
+    })
 
-    const obj = JSON.stringify(spots)
-
-    let spo = JSON.parse(obj)
-
-    spo.forEach(spot => {
-        spot.Reviews.forEach(star => {
-            if (star.review) {
-                star.review = reviewNum
-                spot.numReviews = star.review
-            }
-            for (let id of rating) {
-                if (star.spotId === id.spotId) {
-                    spot.avgStarRating = id.dataValues.Rating
-                }
-            }
-        });
-
-        spot.Users.forEach(user => {
-            delete user.Booking
-            spot.Owner = user
+    if (!spot) {
+        res.status(404)
+        return res.json({
+            "message": "Spot couldn't be found",
+            "statusCode": 404
         })
+    }
 
-        delete spot.spotId
-        delete spot.Reviews
-        delete spot.Users
+    let p = [];
+    p.push(spot.toJSON())
+
+    p.forEach(ele => {
+
+            console.log("LOOKING spot::: =====>  ", ele)
+
+        ele.Owners = ele.User
+        delete ele.User
 
     })
-    return res.json(spo[0])
+
+    res.json(p[0])
 });
 
 
@@ -265,8 +286,7 @@ router.get('/:spotId', async (req, res) => {
 // POST /api/spots
 router.post('/', requireAuth, validateSpot, async (req, res) => {
 
-
-    const user = await User.findByPk(req.user.id);
+    const { user } = req;
 
     const {
         address, city, state,
@@ -274,13 +294,16 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
         description, price } = req.body;
 
 
+
     const spot = await Spot.create({
         ownerId: user.id,
         address, city, state,
         country, lat, lng, name,
-        description, price
+        description, price,
     })
-    res.json(spot)
+
+    await spot.save();
+    return res.json(spot)
 });
 
 // Edit a Spot
@@ -294,6 +317,7 @@ router.put('/:spotId', requireAuth, userPermission, validateSpot, async (req, re
 
     let spot = await Spot.findByPk(req.params.spotId)
 
+    spot.ownerId = req.user.id;
     spot.address = address;
     spot.city = city;
     spot.state = state;
@@ -318,7 +342,12 @@ router.delete('/:spotId', requireAuth, userPermission, async (req, res) => {
     res.json({
         "message": "Successfully deleted",
         "statusCode": 200
-      })
+    })
 });
+
+
+
+
+
 
 module.exports = router;

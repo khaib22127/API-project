@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
      SpotImage.belongsTo(models.Spot, { foreignKey: 'spotId', onDelete: 'CASCADE' });
     //  SpotImage.belongsTo(models.Booking, { through: models.Spot });
-    //  SpotImage.belongsTo(models.Review, { through: models.Spot});
+     SpotImage.belongsTo(models.Review, { through: models.Spot, foreignKey: 'spotId'});
     //  SpotImage.belongsTo(models.User, { through: models.Spot })
     }
   }

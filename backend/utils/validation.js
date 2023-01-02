@@ -42,7 +42,29 @@ const userValidationErrors = (req, res, next) => {
     next();
 };
 
+
+const reviewValidationErrors = (req, res, next) => {
+    const validationErrors = validationResult(req);
+
+    if (!validationErrors.isEmpty()) {
+        let errors = validationErrors
+            .array()
+            .map((error) => ({ [error.param]: error.msg }));
+
+
+        const err = Error();
+        err.errors = Object.assign(errors[0], ...errors);
+        err.status = 403;
+        err.statusCode = 403
+        err.message = "Validation error"
+        next(err);
+
+    }
+    next();
+};
+
 module.exports = {
     handleValidationErrors,
-    userValidationErrors
+    userValidationErrors,
+    reviewValidationErrors
 };

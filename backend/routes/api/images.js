@@ -31,4 +31,8 @@ router.post('/:spotId/images', requireAuth, userPermission, async (req, res) => 
 });
 
 
+
+
+
+
 module.exports = router;

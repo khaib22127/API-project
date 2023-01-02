@@ -13,17 +13,21 @@ module.exports = (sequelize, DataTypes) => {
 
 
     static associate(models) {
+      Spot.belongsTo(models.User, { foreignKey: 'ownerId'})
       Spot.hasMany(models.Review, {  foreignKey: 'spotId' });
       Spot.hasMany(models.Booking, { foreignKey: 'spotId'});
       Spot.hasMany(models.SpotImage, { foreignKey: 'spotId' });
-      Spot.belongsToMany(models.User, { through: models.Booking})
+      Spot.belongsToMany(models.User, { through: models.Booking, foreignKey: 'spotId' })
       // Spot.hasMany(models.ReviewImage, { through: models.Review }, { foreignKey: 'spotId'})
     }
   }
   Spot.init({
     ownerId: {
       type: DataTypes.INTEGER,
-      
+      references: {
+        model: 'User'
+      }
+
     },
     address: {
       type: DataTypes.STRING,
@@ -39,9 +43,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     lat: {
       type: DataTypes.DECIMAL,
-      validate: {
-        isInt: true
-      }
     },
     lng: {
       type: DataTypes.DECIMAL,

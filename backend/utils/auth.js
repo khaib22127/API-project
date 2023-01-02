@@ -1,7 +1,7 @@
 // Phase 3
 const jwt = require('jsonwebtoken');
 const { jwtConfig } = require('../config');
-const { Spot, Review, SpotImage, User, sequelize } = require('../db/models');
+const { Spot, Review, SpotImage, ReviewImage, User, sequelize } = require('../db/models');
 
 const { secret, expiresIn } = jwtConfig;
 
@@ -68,13 +68,13 @@ const requireAuth = function (req, _res, next) {
 }
 
 
-const userAuth = function (req, res, next) {
-    res.status(401);
-    res.json({
-        "message": "Authentication required",
-        "statusCode": 401
-    })
-}
+// const userAuth = function (req, res, next) {
+//     res.status(401);
+//     res.json({
+//         "message": "Authentication required",
+//         "statusCode": 401
+//     })
+// }
 
 
 const userPermission = async function (req, res, next) {
@@ -99,6 +99,61 @@ const userPermission = async function (req, res, next) {
      return next();
 }
 
+const userAuth = async function (req, res, next) {
+    const reviewId = req.params.reviewId
+    const imageCount = await Review.findByPk(reviewId, {
+        include: [
+            {
+                model: ReviewImage,
+                attributes: [[sequelize.fn('COUNT', sequelize.col('ReviewImages.id')), 'numReviews']]
+            },
+        ]
+    })
+    const nums = []
+    nums.push(imageCount.toJSON())
+    nums.forEach(num => {
+
+        if (num.ReviewImages[0].numReviews > 10) {
+            res.status(403)
+           return res.json({
+                "message": "Maximum number of images for this resource was reached",
+                "statusCode": 403
+            })
+        }
+        next(err)
+    })
+    return next()
+}
 
 
-module.exports = { setTokenCookie, restoreUser, requireAuth, userAuth, userPermission };
+
+const userReviewPermission = async function (req, res, next) {
+    const reviewId = req.params.reviewId
+    const imageCount = await Review.findByPk(reviewId)
+    const user = await User.findByPk(req.user.id);
+
+    if (!imageCount) {
+        res.status(404)
+        return res.json({
+            "message": "Spot couldn't be found",
+            "statusCode": 404
+        })
+    }
+
+    const nums = []
+    nums.push(imageCount.toJSON())
+    nums.forEach(num => {
+        console.log("loooking imageCount::: =====>  ", num.userId !== user.id)
+
+            if (num.userId !== user.id) {
+                res.status(404);
+              return res.json({
+                    "message": "Review couldn't be found",
+                    "statusCode": 404
+                })
+            }
+        })
+        return next();
+}
+
+module.exports = { setTokenCookie, restoreUser, requireAuth, userAuth, userPermission, userReviewPermission };
